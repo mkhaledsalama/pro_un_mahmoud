@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Schedule | النظام المطور</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-material-ui/material-ui.min.css" rel="stylesheet">
+<style>
+    :root {
+        --primary: #4338ca;
+        --primary-light: #6366f1;
+        --secondary: #0ea5e9;
+        --dark-bg: #0f172a;
+        --surface: #ffffff;
+        --text-main: #1e293b;
+        --text-sub: #64748b;
+        --danger: #ef4444;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        --radius: 18px;
+    }
+    * { box-sizing: border-box; outline: none; }
+    body {
+        font-family: 'Tajawal', sans-serif;
+        background: radial-gradient(circle at top right, #1e1b4b, #312e81, #0f172a);
+        min-height: 100vh;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        color: var(--text-main);
+    }
+    .container {
+        background: rgba(255, 255, 255, 0.96);
+        width: 100%;
+        max-width: 1000px;
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.3);
+        animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(40px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1, h2, h3 { margin-top: 0; font-weight: 800; letter-spacing: -0.5px; }
+    h1 { 
+        font-size: 2.5rem; 
+        text-align: center; 
+        margin-bottom: 40px; 
+        background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+        -webkit-background-clip: text; 
+        -webkit-text-fill-color: transparent; 
+    }
+    
+    h3 { font-size: 1.2rem; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+    h3 i { color: var(--primary); }
+
+    .btn {
+        border: none;
+        padding: 18px 30px;
+        border-radius: 14px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        color: white;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn::after {
+        content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(rgba(255,255,255,0.2), transparent);
+        opacity: 0; transition: 0.2s;
+    }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 12px 20px -8px rgba(0,0,0,0.3); }
+    .btn:hover::after { opacity: 1; }
+
+    .btn-doc { background: linear-gradient(135deg, #1e293b, #334155); }
+    .btn-eng { background: linear-gradient(135deg, #059669, #10b981); }
+    .btn-stu { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+    
+    .btn-submit { background: linear-gradient(135deg, var(--primary), var(--primary-light)); margin-top: 15px; font-size: 1.2rem;}
+    .btn-danger { background: linear-gradient(135deg, #b91c1c, #ef4444); width: auto; padding: 10px 20px; font-size: 0.9rem; border-radius: 10px;}
+    .btn-warning { background: linear-gradient(135deg, #d97706, #f59e0b); color: white; }
+    
+    .btn-task-submit {
+        background: var(--success);
+        padding: 8px 16px;
+        font-size: 0.9rem;
+        border-radius: 8px;
+        margin-top: 10px;
+        width: auto;
+    }
+    .btn-task-submit:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .btn-logout { background: #f1f5f9; color: #64748b; margin-top: 40px; width: 100%; border: 2px solid #e2e8f0; box-shadow: none;}
+    .btn-logout:hover { background: #e2e8f0; color: #ef4444; border-color: #ef4444; }
+
+    .role-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; margin-top: 30px; }
+
+    label { display: block; margin-bottom: 8px; font-weight: 700; color: var(--text-main); font-size: 0.95rem; }
+    input, select {
+        width: 100%; padding: 18px; border-radius: 14px; border: 2px solid #e2e8f0; background: #f8fafc;
+        font-size: 1.05rem; font-family: inherit; transition: 0.3s; margin-bottom: 25px; color: var(--text-main);
+    }
+    input:focus, select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(67, 56, 202, 0.15); }
+
+    .schedule-row {
+        background: white; padding: 24px; border-radius: 16px; margin-bottom: 20px;
+        display: flex; justify-content: space-between; align-items: center;
+        border: 1px solid #f1f5f9; border-right: 6px solid var(--primary);
+        box-shadow: 0 4px 6px -2px rgba(0,0,0,0.03); transition: transform 0.2s, box-shadow 0.2s;
+        position: relative; overflow: hidden;
+    }
+    .schedule-row:hover { transform: translateX(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08); }
+    .schedule-row div b { font-size: 1.2rem; color: var(--text-main); display: block; margin-bottom: 6px; }
+    .schedule-row div span { font-size: 0.9rem; color: var(--text-sub); }
+    
+    .meta-info { display: flex; gap: 15px; margin-top: 8px; font-size: 0.9rem; color: #475569; font-weight: 500; }
+    .meta-info i { color: var(--secondary); }
+
+    .cancelled { border-right-color: var(--danger) !important; background: #fef2f2 !important; }
+    .cancelled b { text-decoration: line-through; color: #991b1b !important; }
+    
+    .modified-time { border-right-color: var(--warning) !important; background: #fffbeb !important; }
+
+    .tag { padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; margin-right: 10px; }
+    .tag-quiz { background: #fee2e2; color: #dc2626; }
+    .tag-task { background: #dbeafe; color: #2563eb; }
+    .tag-exam { background: #fef3c7; color: #d97706; }
+
+    .dashboard { display: none; animation: fadeIn 0.5s; }
+    .hidden { display: none; }
+
+    .submissions-list {
+        background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; margin-top: 15px; max-height: 200px; overflow-y: auto;
+    }
+    .sub-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #cbd5e1; font-size: 0.9rem; }
+
+    .student-info-header {
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 25px;
+        border: 1px solid #bae6fd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .student-info-header h4 { margin: 0; color: #0284c7; font-size: 1.1rem; }
+    .student-info-header p { margin: 5px 0 0; color: #1e293b; font-weight: bold; font-size: 1.3rem; }
+
+    @media (min-width: 768px) {
+        .container { padding: 60px; }
+        .btn-danger { width: auto; }
+        .grid-2 { grid-template-columns: 1fr 1fr; }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div id="login-screen">
+        <h1><i class="fa-solid fa-layer-group"></i> النظام الأكاديمي المطور</h1>
+        
+        <div id="role-buttons" class="role-grid">
+            <button class="btn btn-doc" onclick="openLogin('doctor')">
+                <i class="fa-solid fa-user-tie"></i> دكتور
+            </button>
+            <button class="btn btn-eng" onclick="openLogin('assistant')">
+                <i class="fa-solid fa-clipboard-user"></i> هيئة معاونة
+            </button>
+            <button class="btn btn-stu" onclick="openLogin('student')">
+                <i class="fa-solid fa-graduation-cap"></i> طالب
+            </button>
+        </div>
+
+        <div id="login-input" class="hidden" style="max-width: 450px; margin: 40px auto;">
+            <div style="text-align: center; margin-bottom: 25px;">
+                <button onclick="backToRoles()" style="background:none; border:none; cursor:pointer; color:var(--text-sub); font-size:1.1rem; font-family:inherit; font-weight:600;">
+                    <i class="fa-solid fa-arrow-right"></i> رجوع للقائمة
+                </button>
+            </div>
+            <h3 id="role-title" style="justify-content:center; border:none; font-size:1.6rem; color:var(--primary);"></h3>
+            
+            <div style="position:relative;">
+                <input id="user-code" placeholder="أدخل الكود التعريفي" type="number" style="padding-right: 20px;">
+                <i class="fa-solid fa-lock" style="position:absolute; left:20px; top:22px; color:#cbd5e1;"></i>
+            </div>
+
+            <button class="btn btn-submit" onclick="performLogin()">
+                تسجيل الدخول
+            </button>
+        </div>
+    </div>
+
+    <div id="staff-dashboard" class="dashboard">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+            <h2 id="staff-title" style="margin:0; font-size:1.8rem;"></h2>
+            <div style="background:#e0e7ff; color:var(--primary); padding:8px 15px; border-radius:30px; font-weight:bold; font-size:0.9rem;">
+                <i class="fa-solid fa-circle-check"></i> حساب موثق
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:30px;">
+            
+            <div style="background: #fff; padding:30px; border-radius:20px; border:1px solid #e2e8f0; box-shadow:0 10px 15px -3px rgba(0,0,0,0.05);">
+                <h3 style="color:var(--danger);"><i class="fa-solid fa-ban"></i> إلغاء محاضرة</h3>
+                <label>اختر اليوم:</label>
+                <select id="staff-cancel-day"></select>
+                <label>اختر الجروب:</label>
+                <select id="staff-cancel-group"></select>
+                <button class="btn btn-danger" onclick="staffCancel()" style="width:100%; margin-top:10px;">تأكيد الإلغاء</button>
+            </div>
+
+            <div style="background: #fff; padding:30px; border-radius:20px; border:1px solid #e2e8f0; box-shadow:0 10px 15px -3px rgba(0,0,0,0.05);">
+                <h3 style="color:var(--warning);"><i class="fa-solid fa-clock-rotate-left"></i> تعديل / ضم المجموعات</h3>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label>اليوم الجديد:</label>
+                        <select id="reschedule-day">
+                            <option>السبت</option><option>الأحد</option><option>الاثنين</option><option>الثلاثاء</option><option>الأربعاء</option><option>الخميس</option><option>الجمعة</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>الوقت (9ص - 5م):</label>
+                        <select id="reschedule-time">
+                            <option value="09:00">09:00 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="13:00">01:00 PM</option>
+                            <option value="14:00">02:00 PM</option>
+                            <option value="15:00">03:00 PM</option>
+                            <option value="16:00">04:00 PM</option>
+                            <option value="17:00">05:00 PM</option>
+                        </select>
+                    </div>
+                </div>
+
+                <label>القاعة / المدرج:</label>
+                <select id="reschedule-place">
+                    <option value="A NEW">A NEW</option>
+                    <option value="G201">G201</option>
+                    <option value="G202">G202</option>
+                    <option value="F">F</option>
+                </select>
+
+                <label>الجروب المستهدف:</label>
+                <select id="reschedule-group">
+                    <option value="1">جروب 1 فقط</option>
+                    <option value="2">جروب 2 فقط</option>
+                    <option value="both">ضم المجموعتين معاً</option>
+                </select>
+
+                <button class="btn btn-warning" onclick="staffReschedule()" style="width:100%; margin-top:10px; color:white;">حفظ التعديل</button>
+            </div>
+
+            <div style="background: #fff; padding:30px; border-radius:20px; border:1px solid #e2e8f0; box-shadow:0 10px 15px -3px rgba(0,0,0,0.05); grid-column: 1 / -1;">
+                <h3><i class="fa-solid fa-pen-nib"></i> إضافة تنبيه / تكليف</h3>
+                <div style="display:grid; grid-template-columns: 1fr 2fr; gap:15px;">
+                    <select id="task-type">
+                        <option value="task">تاسك (تسليم مشروع)</option>
+                        <option value="quiz">كويز (Quiz)</option>
+                        <option value="exam">امتحان</option>
+                        <option value="note">تنويه عام</option>
+                    </select>
+                    <input id="task-date" type="date">
+                </div>
+                <input id="task-desc" placeholder="اكتب تفاصيل التنبيه بوضوح...">
+                <button class="btn btn-submit" onclick="staffAddTask()" style="background:var(--secondary); margin-top:0;">نشر فوراً</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 50px;">
+            <h3><i class="fa-solid fa-list-check"></i> النشاطات والتسليمات</h3>
+            <div id="staff-posts"></div>
+        </div>
+
+        <button class="btn btn-logout" onclick="logout()">
+            تسجيل خروج
+        </button>
+    </div>
+
+    <div id="student-dashboard" class="dashboard">
+        <h2 id="stu-title" style="margin-bottom:20px; font-size:2rem; text-align:center; color:var(--primary);"></h2>
+
+        <div class="student-info-header">
+            <div>
+                <h4><i class="fa-solid fa-user"></i> الطالب:</h4>
+                <p id="info-stu-name">...</p>
+            </div>
+            <div style="text-align: left;">
+                <h4><i class="fa-solid fa-layer-group"></i> السكشن:</h4>
+                <p id="info-stu-sec">...</p>
+            </div>
+        </div>
+
+        <div style="background: #fff; padding:30px; border-radius:20px; margin-bottom:40px; border:1px solid #e2e8f0; box-shadow:0 10px 15px -3px rgba(0,0,0,0.05);">
+            <div class="role-grid" style="margin-top:0;">
+                
+                <div id="section-selector-container" style="display:none;">
+                    <label>رقم السكشن:</label>
+                    <select id="stu-section" onchange="updateStudentSchedule()">
+                        <option value="">-- اختر --</option>
+                        <script>
+                            for(let i=1;i<=13;i++){
+                                document.write(`<option value="${i}">سكشن ${i}</option>`);
+                            }
+                        </script>
+                    </select>
+                </div>
+
+                <div style="grid-column: 1 / -1;">
+                    <label style="text-align:center; font-size:1.1rem; margin-bottom:15px;">اختر اليوم لعرض الجدول والمهام:</label>
+                    <select id="stu-day" onchange="updateStudentSchedule()" style="text-align:center; font-weight:bold; font-size:1.1rem;">
+                        <option value="">-- اختر اليوم --</option>
+                        <option>السبت</option>
+                        <option>الأحد</option>
+                        <option>الاثنين</option>
+                        <option>الثلاثاء</option>
+                        <option>الأربعاء</option>
+                        <option>الخميس</option>
+                        <option>الجمعة</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <h3><i class="fa-regular fa-calendar-days"></i> جدول المحاضرات</h3>
+        <div id="stu-schedule">
+            <div style="text-align:center; padding:40px; background:#f8fafc; border-radius:16px; border:2px dashed #cbd5e1;">
+                <i class="fa-solid fa-hand-pointer" style="font-size:2rem; color:#cbd5e1; margin-bottom:10px;"></i>
+                <p style="color:#64748b; margin:0;">الرجاء اختيار اليوم</p>
+            </div>
+        </div>
+
+        <h3 style="margin-top:40px;"><i class="fa-solid fa-bell"></i> المهام والتنبيهات</h3>
+        <div id="stu-posts"></div>
+
+        <button class="btn btn-logout" onclick="logout()">
+            تسجيل خروج
+        </button>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+
+const studentsDB = {
+    "1": { name: "ابرار حمدي محمد محمد حسن", section: 1, group: 1 },
+    "2": { name: "ابراهيم احمد رمضان احمد", section: 1, group: 1 },
+    "3": { name: "ابراهيم عبد الناصر ابراهيم عبد اللطيف", section: 1, group: 1 },
+    "4": { name: "ابراهيم فاروق ابراهيم احمد", section: 1, group: 1 },
+    "5": { name: "ابراهيم مجدى محمد كامل عبد المقصود", section: 1, group: 1 },
+    "6": { name: "ابراهيم محمد محمد حلاوة", section: 1, group: 1 },
+    "7": { name: "احمد مدحت محمد عبد الخالق", section: 1, group: 1 },
+    "8": { name: "احمد اشرف عوف محمد عوف", section: 1, group: 1 },
+    "9": { name: "احمد اكرامى محمود عبد الحميد", section: 1, group: 1 },
+    "10": { name: "احمد ايمن فاروق عبد الغفار", section: 1, group: 1 },
+    "11": { name: "احمد ايمن نبيل ابراهيم متولى", section: 1, group: 1 },
+    "12": { name: "احمد ايهاب محمد عمران ابراهيم", section: 1, group: 1 },
+    "13": { name: "احمد بلال اسماعيل عبد الرحمن", section: 1, group: 1 },
+    "14": { name: "احمد جمعه محمد بسيوني حسن", section: 1, group: 1 },
+    "15": { name: "احمد حماده احمد عبد السلام", section: 1, group: 1 },
+    "16": { name: "احمد حمدى مسعود على عمار", section: 1, group: 1 },
+    "17": { name: "احمد خالد احمد محمد شحاته", section: 1, group: 1 },
+    "18": { name: "احمد خالد عصران خميس مصطفى", section: 1, group: 1 },
+    "19": { name: "احمد ربيع ابراهيم شحاته", section: 1, group: 1 },
+    "20": { name: "احمد سامى سعيد حسن", section: 1, group: 1 },
+    "21": { name: "احمد سعد محمد عبد الكريم", section: 1, group: 1 },
+    "22": { name: "احمد سعيد صابر سارى", section: 1, group: 1 },
+    "23": { name: "احمد صابر خليل احمد", section: 1, group: 1 },
+    "24": { name: "احمد صابر بكرى محمد عمران", section: 1, group: 1 },
+    "25": { name: "احمد عبد الرحمن دسوقي ابراهيم", section: 1, group: 1 },
+    "26": { name: "احمد عبدالله امين متولى", section: 1, group: 1 },
+    "27": { name: "احمد علاء السيد حسن داود", section: 1, group: 1 },
+    "28": { name: "احمد علاء الدين محمد حسن", section: 1, group: 1 },
+    "29": { name: "احمد عمرو احمد عبد الحميد", section: 1, group: 1 },
+    "30": { name: "احمد عمرو مصطفى حسن الشويخ", section: 1, group: 1 },
+    "31": { name: "احمد عويضه احمد عويضه", section: 1, group: 1 },
+    "32": { name: "احمد محمد احمد عواد مبروك", section: 1, group: 1 },
+    "33": { name: "احمد محمد البدرى فكرى عوض", section: 1, group: 1 },
+    "34": { name: "احمد محمد السيد سلطان", section: 1, group: 1 },
+    "35": { name: "احمد محمد رشاد على", section: 1, group: 1 },
+    "36": { name: "احمد محمد سيد حافظ عبد الغنى", section: 1, group: 1 },
+    "37": { name: "احمد محمد عبد المنعم محمد خليل", section: 1, group: 1 },
+    "38": { name: "احمد محمد محمد محمد", section: 1, group: 1 },
+    "39": { name: "احمد محمد محمد محمود", section: 1, group: 1 },
+    "40": { name: "احمد محمود السيد عبد اللطيف", section: 1, group: 1 }
+};
+
+// قاعدة بيانات الدكاترة (كما هي)
+const teachersDB = {
+    "20250": { name:"د. جهاد زياده", role:"doctor", subject:"Statistics", lectures:[{group:"1",day:"الجمعة",time:"12:30",place:"F sem"},{group:"2",day:"الجمعة",time:"01:40",place:"F sem"}] },
+    "20251": { name:"د. سيمون عزت", role:"doctor", subject:"Math", lectures:[{group:"1",day:"الجمعة",time:"02:50",place:"A new"},{group:"2",day:"الجمعة",time:"02:50",place:"A new"}] },
+    "20252": { name:"د. صابرين", role:"doctor", subject:"English", lectures:[{group:"1",day:"السبت",time:"09:00",place:"G205"},{group:"2",day:"السبت",time:"10:10",place:"G205"}] },
+    "20253": { name:"د. هند زياده", role:"doctor", subject:"IS", lectures:[{group:"1",day:"السبت",time:"10:10",place:"A new"},{group:"2",day:"السبت",time:"09:00",place:"A new"}] },
+    "20254": { name:"د. شريف إبراهيم", role:"doctor", subject:"DT", lectures:[{group:"1",day:"الاثنين",time:"04:00",place:"F sem"},{group:"2",day:"الاثنين",time:"05:10",place:"F sem"}] },
+    "20255": { name:"د. أحمد بكر", role:"doctor", subject:"Physics", lectures:[{group:"1",day:"الأربعاء",time:"11:20",place:"A new"},{group:"2",day:"الأربعاء",time:"12:30",place:"A new"}] },
+    "20256": { name:"د. مي عبد العظيم", role:"doctor", subject:"IT", lectures:[{group:"1",day:"الخميس",time:"11:20",place:"A new"},{group:"2",day:"الخميس",time:"12:30",place:"A new"}] }
+};
+
+// تهيئة LocalStorage
+if (!localStorage.getItem("smart_posts")) localStorage.setItem("smart_posts", JSON.stringify([]));
+if (!localStorage.getItem("smart_overrides")) localStorage.setItem("smart_overrides", JSON.stringify([])); 
+if (!localStorage.getItem("smart_submissions")) localStorage.setItem("smart_submissions", JSON.stringify([]));
+
+function groupFromSection(sec){
+    sec = Number(sec);
+    return (sec >= 1 && sec <= 7) ? "1" : "2";
+}
+
+let currentUser = null;
+let selectedRole = null;
+
+// ====================== LOGIN LOGIC ===============================
+function openLogin(role){
+    selectedRole = role;
+    document.getElementById("role-buttons").style.display="none";
+    document.getElementById("login-input").classList.remove("hidden");
+    document.getElementById("login-input").style.display="block";
+
+    let title = role==="doctor"?"بوابة أعضاء التدريس":
+                role==="assistant"?"بوابة الهيئة المعاونة":"بوابة الطلاب";
+    document.getElementById("role-title").innerText = title;
+}
+
+function backToRoles(){
+    document.getElementById("login-input").style.display="none";
+    document.getElementById("role-buttons").style.display="grid";
+}
+
+function performLogin(){
+    let code = document.getElementById("user-code").value;
+    
+    // Student Login Check
+    if(selectedRole==="student"){
+        if(studentsDB[code]){
+            currentUser = {role:"student", id: code, ...studentsDB[code]};
+            showStudent();
+        } else {
+            Swal.fire({icon: 'error', title: 'خطأ', text: 'كود الطالب غير مسجل (جرب: 1, 2... 40)'});
+        }
+        return;
+    }
+
+    // Doctor Login Check
+    if(teachersDB[code] && teachersDB[code].role==="doctor"){
+        currentUser = teachersDB[code];
+        currentUser.code = code;
+        showStaff();
+        return;
+    }
+
+    Swal.fire({icon: 'error', title: 'خطأ', text: 'كود الدخول غير صحيح!'});
+}
+
+// ==================== STAFF LOGIC ======================
+function showStaff(){
+    document.getElementById("login-screen").style.display="none";
+    document.getElementById("staff-dashboard").style.display="block";
+    document.getElementById("staff-title").innerHTML = `أهلاً، <span style="color:var(--primary)">${currentUser.name}</span>`;
+
+    loadStaffControls();
+    renderStaffPosts();
+}
+
+function loadStaffControls(){
+    const daySel = document.getElementById("staff-cancel-day");
+    const grpSel = document.getElementById("staff-cancel-group");
+    daySel.innerHTML=""; grpSel.innerHTML="";
+
+    // Populate drop-downs for Cancel
+    let days = new Set();
+    currentUser.lectures.forEach(l => days.add(l.day));
+    days.forEach(d => daySel.innerHTML+=`<option>${d}</option>`);
+    
+    grpSel.innerHTML = `<option value="1">جروب 1</option><option value="2">جروب 2</option>`;
+}
+
+// === خاصية كشف التعارض والوقت ===
+function checkConflict(day, time, place) {
+    for (let tId in teachersDB) {
+        let t = teachersDB[tId];
+        for (let l of t.lectures) {
+            if (l.day === day && l.time === time && l.place === place) return true;
+        }
+    }
+    let overrides = JSON.parse(localStorage.getItem("smart_overrides"));
+    for (let o of overrides) {
+        if (o.newDay === day && o.newTime === time && o.newPlace === place) return true;
+    }
+    return false;
+}
+
+function staffReschedule(){
+    let newDay = document.getElementById("reschedule-day").value;
+    let newTime = document.getElementById("reschedule-time").value;
+    let newPlace = document.getElementById("reschedule-place").value;
+    let targetGroup = document.getElementById("reschedule-group").value;
+
+    if(checkConflict(newDay, newTime, newPlace)){
+        Swal.fire("تعارض!", `القاعة ${newPlace} مشغولة يوم ${newDay} الساعة ${newTime}`, "error");
+        return;
+    }
+
+    let overrides = JSON.parse(localStorage.getItem("smart_overrides"));
+    let groupsToUpdate = targetGroup === "both" ? ["1", "2"] : [targetGroup];
+    
+    groupsToUpdate.forEach(g => {
+        overrides = overrides.filter(o => !(o.subject === currentUser.subject && o.group === g));
+        overrides.push({
+            id: Date.now() + Math.random(),
+            subject: currentUser.subject,
+            doctor: currentUser.name,
+            group: g,
+            newDay: newDay,
+            newTime: newTime,
+            newPlace: newPlace,
+            isMerged: targetGroup === "both"
+        });
+    });
+
+    localStorage.setItem("smart_overrides", JSON.stringify(overrides));
+    
+    let posts = JSON.parse(localStorage.getItem("smart_posts"));
+    let msg = targetGroup==="both" ? "تم ضم المجموعتين وتعديل الموعد" : "تم تعديل موعد المحاضرة";
+    posts.push({
+        id: Date.now(),
+        type: "note",
+        subject: currentUser.subject,
+        desc: `${msg}: يوم ${newDay} الساعة ${newTime} في ${newPlace}`,
+        date: new Date().toISOString().split('T')[0],
+        author: currentUser.name
+    });
+    localStorage.setItem("smart_posts", JSON.stringify(posts));
+
+    Toastify({text: "تم تعديل الموعد وحجز القاعة", backgroundColor: "#0ea5e9"}).showToast();
+    renderStaffPosts();
+}
+
+function staffCancel(){
+    let day = document.getElementById("staff-cancel-day").value;
+    let group = document.getElementById("staff-cancel-group").value;
+    let posts = JSON.parse(localStorage.getItem("smart_posts"));
+
+    posts.push({id:Date.now(), type:"cancel", subject:currentUser.subject, day:day, group:group, author:currentUser.name});
+    localStorage.setItem("smart_posts",JSON.stringify(posts));
+    
+    Toastify({text: "تم إلغاء المحاضرة", backgroundColor: "#ef4444"}).showToast();
+    renderStaffPosts();
+}
+
+function staffAddTask(){
+    let type = document.getElementById("task-type").value;
+    let desc = document.getElementById("task-desc").value;
+    let date = document.getElementById("task-date").value;
+
+    if(!desc) return Swal.fire("تنبيه","أدخل وصفاً للمهمة","warning");
+
+    let posts = JSON.parse(localStorage.getItem("smart_posts"));
+    posts.push({id:Date.now(), type:type, subject:currentUser.subject, desc:desc, date:date, author:currentUser.name});
+    localStorage.setItem("smart_posts",JSON.stringify(posts));
+    
+    Toastify({text: "تم النشر بنجاح", backgroundColor: "#10b981"}).showToast();
+    document.getElementById("task-desc").value = "";
+    renderStaffPosts();
+}
+
+function renderStaffPosts(){
+    let posts = JSON.parse(localStorage.getItem("smart_posts"));
+    let submissions = JSON.parse(localStorage.getItem("smart_submissions"));
+    let box = document.getElementById("staff-posts");
+    box.innerHTML="";
+
+    let myPosts = posts.filter(p=>p.author===currentUser.name).reverse();
+    if(myPosts.length === 0) box.innerHTML = "<p style='color:#94a3b8; text-align:center'>لا توجد منشورات حالياً</p>";
+
+    myPosts.forEach(p=>{
+        let labelHTML = "";
+        if(p.type === "quiz") labelHTML = `<span class="tag tag-quiz">Quiz</span>`;
+        else if(p.type === "task") labelHTML = `<span class="tag tag-task">Task</span>`;
+        else if(p.type === "exam") labelHTML = `<span class="tag tag-exam">Exam</span>`;
+        else if(p.type === "cancel") labelHTML = `<span class="tag" style="background:#fee2e2; color:red">إلغاء</span>`;
+
+        let subListHTML = "";
+        if(p.type === "task") {
+            let mySubs = submissions.filter(s => s.taskId === p.id);
+            if(mySubs.length > 0) {
+                subListHTML = `<div class="submissions-list"><strong><i class="fa-solid fa-file-arrow-down"></i> الاستلامات (${mySubs.length}):</strong>`;
+                mySubs.forEach(s => {
+                    subListHTML += `<div class="sub-item"><span>${s.studentName} (${s.studentId})</span> <span>${s.time}</span></div>`;
+                });
+                subListHTML += `</div>`;
+            } else {
+                subListHTML = `<div style="margin-top:10px; font-size:0.85rem; color:#64748b">لم يتم التسليم من أي طالب بعد</div>`;
+            }
+        }
+
+        box.innerHTML+=`
+            <div class="schedule-row ${p.type==='cancel'?'cancelled':''}" style="display:block">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                    <div>
+                        <div style="display:flex; align-items:center; margin-bottom:5px;">
+                            ${labelHTML}
+                            <b>${p.subject}</b>
+                        </div>
+                        <span style="display:block; margin-top:5px; color:#334155">${p.desc || (p.day + " - جروب " + p.group)}</span>
+                    </div>
+                    <button class="btn btn-danger" onclick="deletePost(${p.id})"><i class="fa-solid fa-trash"></i></button>
+                </div>
+                ${subListHTML}
+            </div>
+        `;
+    });
+}
+
+function deletePost(id){
+    let posts = JSON.parse(localStorage.getItem("smart_posts"));
+    posts = posts.filter(p=>p.id!==id);
+    localStorage.setItem("smart_posts",JSON.stringify(posts));
+    renderStaffPosts();
+}
+
+// ===================== STUDENT LOGIC ============================
+function showStudent(){
+    document.getElementById("login-screen").style.display="none";
+    document.getElementById("student-dashboard").style.display="block";
+    
+    // Set Student Info
+    document.getElementById("stu-title").innerHTML = `<i class="fa-solid fa-user-graduate"></i> لوحة الطالب`;
+    document.getElementById("info-stu-name").innerText = currentUser.name;
+    document.getElementById("info-stu-sec").innerText = "سكشن " + currentUser.section;
+
+    // Auto-select section based on user data
+    let sectionSelect = document.getElementById("stu-section");
+    sectionSelect.value = currentUser.section;
+    
+    // No need to show Filter instructions, just wait for Day selection
+}
+
+function updateStudentSchedule(){
+    let sec = document.getElementById("stu-section").value; // Auto-filled now
+    let day = document.getElementById("stu-day").value;
+    let box = document.getElementById("stu-schedule");
+
+    if(!sec || !day) return;
+
+    let group = groupFromSection(sec);
+    let posts = JSON.parse(localStorage.getItem("smart_posts"));
+    let overrides = JSON.parse(localStorage.getItem("smart_overrides"));
+    let todayLectures = [];
+
+    // 1. Get Base Schedule
+    Object.values(teachersDB).forEach(t=>{
+        t.lectures.forEach(l=>{
+            let override = overrides.find(o => o.subject === t.subject && o.group === group);
+            
+            let activeDay = override ? override.newDay : l.day;
+            let activeTime = override ? override.newTime : l.time;
+            let activePlace = override ? override.newPlace : l.place;
+            let isModified = !!override;
+
+            if(activeDay === day && l.group === group){
+                let cancelled = posts.some(p=>p.type==="cancel" && p.subject===t.subject && p.day===day && p.group===group);
+                
+                todayLectures.push({ 
+                    subject: t.subject, 
+                    doctor: t.name, 
+                    time: activeTime, 
+                    place: activePlace, 
+                    cancelled: cancelled,
+                    modified: isModified
+                });
+            }
+        });
+    });
+
+    if(todayLectures.length===0){
+        box.innerHTML="<div style='text-align:center; padding:30px; background:#f1f5f9; border-radius:16px;'>✨ لا توجد محاضرات لهذا اليوم</div>";
+        renderStudentPosts();
+        return;
+    }
+
+    box.innerHTML="";
+    todayLectures.forEach(l=>{
+        let statusBadge = "";
+        if(l.cancelled) statusBadge = '<span style="color:var(--danger); font-weight:bold;"><i class="fa-solid fa-ban"></i> ملغية</span>';
+        else if(l.modified) statusBadge = '<span style="color:var(--warning); font-weight:bold;"><i class="fa-solid fa-pen"></i> تم تعديل الميعاد</span>';
+
+        box.innerHTML+=`
+        <div class="schedule-row ${l.cancelled?"cancelled":""} ${l.modified && !l.cancelled?"modified-time":""}">
+            <div style="width:100%">
+                <div style="display:flex; justify-content:space-between;">
+                    <b>${l.subject}</b>
+                    ${statusBadge}
+                </div>
+                
+                <div class="meta-info">
+                    <span><i class="fa-regular fa-clock"></i> ${l.time}</span>
+                    <span><i class="fa-solid fa-location-dot"></i> ${l.place}</span>
+                </div>
+                
+                <div style="margin-top:12px; padding-top:10px; border-top:1px solid #f1f5f9; font-size:0.95rem; color:var(--primary);">
+                    <i class="fa-solid fa-chalkboard-user"></i> ${l.doctor}
+                </div>
+            </div>
+        </div>`;
+    });
+
+    renderStudentPosts();
+}
+
+function renderStudentPosts(){
+    let posts = JSON.parse(localStorage.getItem("smart_posts"));
+    let submissions = JSON.parse(localStorage.getItem("smart_submissions"));
+    let box = document.getElementById("stu-posts");
+    box.innerHTML="";
+
+    let activePosts = posts.filter(p=>p.type!=="cancel").reverse();
+    if(activePosts.length===0) box.innerHTML = "<p style='text-align:center; color:#94a3b8'>لا توجد تنبيهات جديدة</p>";
+
+    activePosts.forEach(p=>{
+        let icon = "fa-bell";
+        let color = "var(--primary)";
+        let tag = "";
+        
+        if(p.type === "quiz") { icon = "fa-stopwatch"; color = "#dc2626"; tag = "Quiz"; }
+        else if(p.type === "task") { icon = "fa-list-check"; color = "#2563eb"; tag = "Task"; }
+        else if(p.type === "exam") { icon = "fa-file-signature"; color = "#d97706"; tag = "Exam"; }
+        else if(p.type === "note") { icon = "fa-info-circle"; color = "#059669"; tag = "تنبيه"; }
+
+        let actionBtn = "";
+        if(p.type === "task"){
+            let isSubmitted = submissions.some(s => s.taskId === p.id && s.studentId === currentUser.id);
+            if(isSubmitted){
+                actionBtn = `<button class="btn btn-task-submit" disabled><i class="fa-solid fa-check"></i> تم التسليم</button>`;
+            } else {
+                actionBtn = `<button class="btn btn-task-submit" onclick="submitTask(${p.id})"><i class="fa-solid fa-upload"></i> تسليم المشروع</button>`;}}
+        box.innerHTML+=`
+            <div class="schedule-row" style="border-right-color:${color}">
+                <div style="width:100%">
+                    <div style="display:flex; justify-content:space-between; align-items:center">
+                        <b style="color:${color}; display:flex; align-items:center; gap:8px;">
+                            <i class="fa-solid ${icon}"></i> ${tag}: ${p.subject}
+                        </b>
+                        <span style="font-size:0.85rem; background:#f1f5f9; padding:4px 10px; border-radius:6px; color:#475569;">
+                            <i class="fa-regular fa-calendar"></i> ${p.date || "بدون تاريخ"}
+                        </span>
+                    </div>
+                    <p style="margin:12px 0; font-size:1.05rem; color:#334155; line-height:1.6">${p.desc}</p>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; border-top:1px solid #f1f5f9; padding-top:10px;">
+                        <span style="font-size:0.8rem; color:#94a3b8;"><i class="fa-solid fa-user-pen"></i> ${p.author}</span>
+                        ${actionBtn}
+                    </div>
+                </div>
+            </div>
+        `;   });}
+function submitTask(taskId){
+    Swal.fire({
+        title: 'تأكيد التسليم',
+        text: "سيتم تسجيل اسمك ووقت التسليم للدكتور. هل أنت متأكد؟",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'نعم، تسليم',
+        cancelButtonText: 'إلغاء'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            let submissions = JSON.parse(localStorage.getItem("smart_submissions"));
+            let now = new Date();
+            let timeString = now.toLocaleDateString('ar-EG') + ' ' + now.toLocaleTimeString('ar-EG');
+            
+            submissions.push({
+                taskId: taskId,
+                studentId: currentUser.id,
+                studentName: currentUser.name,
+                time: timeString
+            });           
+            localStorage.setItem("smart_submissions", JSON.stringify(submissions));
+            Swal.fire('تم التسليم!', 'وصل المشروع للدكتور بنجاح.', 'success');
+            renderStudentPosts();
+        }
+    })
+}
+function logout(){
+    Swal.fire({
+        title: 'تسجيل خروج',
+        text: 'هل أنت متأكد؟',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#4338ca',
+        cancelButtonColor: '#ef4444',
+        confirmButtonText: 'نعم',
+        cancelButtonText: 'إلغاء'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            location.reload();
+        }
+    })
+}
+</script>
+</body>
+</html>
